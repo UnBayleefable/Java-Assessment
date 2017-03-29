@@ -20,9 +20,9 @@ public class BinaryTree {
 
     Node root;
 
-    public void addNode(int key) {
+    public void addNode(int key, String value) {
         
-        Node newNode = new Node(key);
+        Node newNode = new Node(key, value);
         if (root == null) {
             root = newNode;
         } else {
@@ -47,29 +47,42 @@ public class BinaryTree {
         }
     }
 
-    public ArrayList inOrderTraverseTree(Node focusNode, ArrayList<String> arr) {
+    public ArrayList inOrderTraverseTree(Node focusNode, ArrayList<String[]> arr) {
         if (focusNode != null) {
             inOrderTraverseTree(focusNode.leftChild, arr);
-            arr.add(focusNode.key + "");
+            
+            String[] temp = new String[2];
+            temp[0] = focusNode.key + "";
+            temp[1] = focusNode.value;
+            arr.add(temp);
+            
             inOrderTraverseTree(focusNode.rightChild, arr);
         }
         return arr;
     }
 
-    public ArrayList preorderTraverseTree(Node focusNode, ArrayList<String> arr) {
+    public ArrayList preorderTraverseTree(Node focusNode, ArrayList<String[]> arr) {
         if (focusNode != null) {
-            arr.add(focusNode.key + "");
+            String[] temp = new String[2];
+            temp[0] = focusNode.key + "";
+            temp[1] = focusNode.value;
+            arr.add(temp);
+            
             preorderTraverseTree(focusNode.leftChild, arr);
             preorderTraverseTree(focusNode.rightChild, arr);
         }
         return arr;
     }
 
-    public ArrayList postOrderTraverseTree(Node focusNode, ArrayList<String> arr) {
+    public ArrayList postOrderTraverseTree(Node focusNode, ArrayList<String[]> arr) {
         if (focusNode != null) {
             postOrderTraverseTree(focusNode.leftChild, arr);
             postOrderTraverseTree(focusNode.rightChild, arr);
-            arr.add(focusNode.key + "");
+            
+            String[] temp = new String[2];
+            temp[0] = focusNode.key + "";
+            temp[1] = focusNode.value;
+            arr.add(temp);
         }
         return arr;
     }
@@ -94,18 +107,19 @@ public class BinaryTree {
 class Node {
 
     int key; 
-    String name; // technically i took this out because i am a retard
+    String value; // technically i took this out because i am a retard
 
     Node leftChild;
     Node rightChild;
 
-    Node(int key) {
+    Node(int key, String value) {
         this.key = key;
+        this.value = value;
 
     }
     public String toString() {
 
-		return name + " has the key " + key;
+		return value + " has the key " + key;
 
 		/*
 		 * return name + " has the key " + key + "\nLeft Child: " + leftChild +

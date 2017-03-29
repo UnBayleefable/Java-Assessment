@@ -9,6 +9,7 @@ import java.util.*;
 import java.sql.*;
 import java.util.logging.Level;
 import java.util.logging.Logger;
+import javax.swing.RowFilter.Entry;
 import javax.swing.table.AbstractTableModel;
 
 public class TrafficMonitoringApplication extends JFrame implements ActionListener, KeyListener {
@@ -25,6 +26,7 @@ public class TrafficMonitoringApplication extends JFrame implements ActionListen
 
     public NewDoublyLinkedList myDLList;
     public DLLNode node;
+    public HashMap<Integer, String> hm;
 
     String[] tblTrafficDataHeadings = new String[]{"Time", "Location", "Av.Vehicle#", "Av.Velocity"};
     String[] tblMonitorHeadings = new String[]{"Station ID:", "Report Status:"};
@@ -32,9 +34,9 @@ public class TrafficMonitoringApplication extends JFrame implements ActionListen
     ArrayList<TrafficData> trafficData;
     ArrayList<Object[]> trafficTableData;
     ArrayList<Object[]> monitorData;
-    ArrayList<String> binaryData;
+    ArrayList<String[]> binaryData;
     ArrayList<String> linkedListData;
-
+    String fileName = "binarysave";
     SpringLayout springLayout;
 
     private Socket socket = null;
@@ -44,12 +46,12 @@ public class TrafficMonitoringApplication extends JFrame implements ActionListen
     private int serverPort = 4444;
 
     //</editor-fold>
-    public static void main(String[] args) throws SQLException {
+    public static void main(String[] args) throws SQLException, IOException, FileNotFoundException, ClassNotFoundException {
         TrafficMonitoringApplication AppWindow = new TrafficMonitoringApplication();
         AppWindow.run();
     }
 
-    public void run() throws SQLException {
+    public void run() throws SQLException, IOException, FileNotFoundException, ClassNotFoundException {
         setTitle("Traffic Monitoring Application");
         setBounds(500, 250, 700, 610);
         addWindowListener(new WindowAdapter() {
@@ -160,7 +162,11 @@ public class TrafficMonitoringApplication extends JFrame implements ActionListen
         }
 
         if (e.getSource() == btnIOSave) {
-
+            try {
+                writeData();
+            } catch (IOException ex) {
+                System.out.println("error: " + ex);
+            }
         }
 
         if (e.getSource() == btnPostDisplay) {
@@ -224,15 +230,16 @@ public class TrafficMonitoringApplication extends JFrame implements ActionListen
     //</editor-fold>
     
     //<editor-fold defaultstate="collapsed" desc="File Management">
-    private void readData() throws SQLException {
+    private void readData() throws SQLException, FileNotFoundException, IOException, ClassNotFoundException {
 
         trafficData = new ArrayList<>();
         TrafficData data = new TrafficData();
         trafficData = data.GetAllData();
         disperseData(trafficData);
+
     }
 
-    public void disperseData(ArrayList<TrafficData> arr) {
+    public void disperseData(ArrayList<TrafficData> arr) throws IOException, ClassNotFoundException {
         trafficTableData = new ArrayList<>();
         myModel = new TableModel(trafficTableData, tblTrafficDataHeadings);
         
@@ -240,12 +247,16 @@ public class TrafficMonitoringApplication extends JFrame implements ActionListen
         trafficTree = new BinaryTree();
         myDLList = new NewDoublyLinkedList();
         for (TrafficData temp : arr) {
-            
+            String timeTemp = temp.Time + temp.LocationID;
             myDLList.InsertTailNode(myDLList, new DLLNode(temp));
-            trafficTree.addNode(Integer.parseInt(temp.TotalVehicleNum));
+            trafficTree.addNode(Integer.parseInt(temp.TotalVehicleNum), temp.Time + temp.LocationID);
             addTableData(temp);
         }
-        
+        ObjectInputStream hmIn = new ObjectInputStream(new FileInputStream("HashMap.ser"));
+        hm = (HashMap) hmIn.readObject();
+        hmIn.close();
+        System.out.println(hm); 
+        //Integer.parseInt(temp.TotalVehicleNum)
     }
 
     public void addTableData(TrafficData arr) {
@@ -255,19 +266,29 @@ public class TrafficMonitoringApplication extends JFrame implements ActionListen
 
     }
 
-    public void writeData(String fileName) throws IOException {
-        BufferedWriter outFile = new BufferedWriter(new FileWriter(fileName + ".txt"));
-
-        for (int i = 0; i < binaryData.size(); i++) {
-            //process for writing out binary data with hashing algorithm
-        }
+    public void writeData() throws IOException {
+        
+        ObjectOutputStream hashOut = new ObjectOutputStream(new FileOutputStream("HashMap.ser"));
+        hashMapping();
+        System.out.println(hm);
+        hashOut.writeObject(hm);
+        hashOut.close();        
+        
+//        Properties properties = new Properties();
+        
+//        
+//        for (Map.Entry<Integer,String> entry : hm.entrySet()) {
+//    properties.put(entry.getKey(), entry.getValue());
+//}
+//        
+//        properties.store(new FileOutputStream("data.Properties"), null);
     }
 
     private void drawData() {
 
         DisplayLinkedList();
         DisplayBinaryTree();
-tblTrafficData.repaint();
+        tblTrafficData.repaint();
     }
 
     private void DisplayBinaryTree() {
@@ -280,9 +301,9 @@ tblTrafficData.repaint();
 
         for (int i = 0; i < binaryData.size(); i++) {
             if (i == binaryData.size() - 1) {
-                txtBinaryTree.append(binaryData.get(i));
+                txtBinaryTree.append(binaryData.get(i)[0]);
             } else {
-                txtBinaryTree.append(binaryData.get(i) + ", ");
+                txtBinaryTree.append(binaryData.get(i)[0] + ", ");
             }
         }
     }
@@ -306,12 +327,28 @@ tblTrafficData.repaint();
 
     }
 
-    private void testArrayContents(ArrayList<Object[]> arr) {
+    private void testArrayContents(ArrayList<String[]> arr) {
         for (int i = 0; i < arr.size(); i++) {
-            System.out.println(arr.get(i)[0] + " " + arr.get(i)[1] + " " + arr.get(i)[2] + " " + arr.get(i)[3]);
+            System.out.println(arr.get(i)[0] + " " + arr.get(i)[1]);
 
         }
         System.out.println();
+    }
+    
+    private void hashMapping()
+    {
+        
+        hm = new HashMap<Integer, String>();
+        testArrayContents(binaryData);
+        int i = 0;
+        for (String[] key : binaryData)
+        {
+            hm.put(Integer.parseInt(binaryData.get(i)[0]), binaryData.get(i)[1]);
+            i++;
+        }
+        
+
+
     }
 
     //</editor-fold>
@@ -338,8 +375,8 @@ tblTrafficData.repaint();
 
         binaryData = new ArrayList<>(); // fixing a doubling issue within the binary data after initial startup        
         myDLList.InsertTailNode(myDLList, new DLLNode(data));
-        trafficTree.addNode(Integer.parseInt(data.TotalVehicleNum));
-
+        trafficTree.addNode(Integer.parseInt(data.TotalVehicleNum), data.Time + data.LocationID);
+      
         
         drawData();
     }
