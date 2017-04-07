@@ -1,23 +1,21 @@
-/*
- * To change this license header, choose License Headers in Project Properties.
- * To change this template file, choose Tools | Templates
- * and open the template in the editor.
- */
+
 package trafficmonitoringapplication;
 
-//Source:
+//Reference:
 //  Creating a simple Chat Client/Server Solution 
 //  http://pirate.shu.edu/~wachsmut/Teaching/CSAS2214/Virtual/Lectures/chat-client-server.html
 import java.net.*;
 import java.io.*;
-// replace all instances of clients to station unless its reference to the main office
 
+/**
+ *
+ * @author Shane Plater - 2017
+ */
 public class Server implements Runnable {
 
     private ServerThread clients[] = new ServerThread[50];
     private ServerSocket server = null;
-    private Thread thread = null;
-    private TrafficData trafficData;
+    private Thread thread = null;    
     private int clientCount = 0;
 
     public Server(int port) {
@@ -35,7 +33,7 @@ public class Server implements Runnable {
         while (thread != null) {
             try {
                 System.out.println("Waiting for a client ...");
-                addThread(server.accept());
+                addThread(server.accept()); // add new thread to list of clients
 
             } catch (IOException ioe) {
                 System.out.println("Server accept error: " + ioe);
@@ -45,13 +43,13 @@ public class Server implements Runnable {
     }
 
     public void start() {
-        if (thread == null) {
+        if (thread == null) { // if no thread is available when start is called
             thread = new Thread(this);
             thread.start();
         }
     }
 
-    public void stop() {
+    public void stop() { // stop has been depreciated from the java.lang library
         if (thread != null) {
             thread.stop();
             thread = null;
@@ -68,12 +66,12 @@ public class Server implements Runnable {
     }
 
     public synchronized void handle(TrafficData data) {
- //return the id of the main office and only send data to that
+
         System.out.println("sending Data");
   for (int i = 0; i < clientCount; i++)
             {
                 //if(clients[i].getID() != ID)
-                clients[i].send(data);
+                clients[i].send(data); // send recieved data to all clients available
                 System.out.println("Sent data to: " + clients[i].toString());
             }
         
@@ -117,8 +115,7 @@ public class Server implements Runnable {
 
     public static void main(String args[]) {
         Server server;
-        if (args.length != 1) {
-            //System.out.println("Usage: java ChatServer port");
+        if (args.length != 1) {            
             server = new Server(4444); // no argument (port) defined run stock port 4444
         } else {
             server = new Server(Integer.parseInt(args[0])); // port defined so use it.

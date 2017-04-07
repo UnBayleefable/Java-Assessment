@@ -2,7 +2,7 @@
  * --------------------------------------------------------
  * Class: LibraryComponents
  *
- * @author Mark O'Reilly
+ * @author Mark O'Reilly, Shane Plater
  * Developed: 2017
  *
  * Purpose: To contain a library of utility methods that can be accessed from other Java applications
@@ -12,7 +12,7 @@
  *  - LocateAJTextField - for positioning a JTextField using SpringLayout
  *  - LocateAJButton - for positioning a JButton using SpringLayout
  *  - LocateAJTextArea - for positioning a JTextArea using SpringLayout
- *
+ *  - LocateAJTable - for positioning a JTable using SpringLayout
  * ----------------------------------------------------------
  */
 package trafficmonitoringapplication;
@@ -101,8 +101,7 @@ public class LibraryComponents
     public static JTextArea LocateAJTextArea(JFrame myJFrame, SpringLayout myLayout, JTextArea myJTextArea, int x, int y, int w, int h)
     {
         
-        myJTextArea = new JTextArea(w, h);
-        JScrollPane areaScrollPane = new JScrollPane(myJTextArea);
+        myJTextArea = new JTextArea(w, h);        
         myJFrame.add(myJTextArea);
         myLayout.putConstraint(SpringLayout.WEST, myJTextArea, x, SpringLayout.WEST, myJFrame);
         myLayout.putConstraint(SpringLayout.NORTH, myJTextArea, y, SpringLayout.NORTH, myJFrame);
@@ -114,7 +113,7 @@ public class LibraryComponents
      * -------------------------------------------------------- Purpose: Locate
      * a single JTable within the JFrame.
      *
-     * @param Target_JFrame, Layout_manager, JTextTable_name,Data_ArrayList<Object[]>, Column_Names, Xpos, Ypos, Width, Height
+     * @param Target_JFrame, Table_Model, Layout_manager, JTable_Name,Data_ArrayList<Object[]>, Column_Names, Xpos, Ypos, Width, Height
      * @returns The JTable.
      * ----------------------------------------------------------
      */

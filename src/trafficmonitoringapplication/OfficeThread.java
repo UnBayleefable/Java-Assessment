@@ -13,7 +13,7 @@ import java.util.logging.Logger;
 
 /**
  *
- * @author student
+ * @author Shane Plater - 2017
  */
 public class OfficeThread extends Thread
 {
@@ -34,13 +34,11 @@ public class OfficeThread extends Thread
     {
         try
         {
-            streamIn = new ObjectInputStream(new BufferedInputStream(socket.getInputStream()));
-          //  System.out.println(streamIn);
+            streamIn = new ObjectInputStream(new BufferedInputStream(socket.getInputStream()));         
         }
         catch (IOException ioe)
         {
-            System.out.println("Error getting input stream: " + ioe);
-            //client1.stop();
+            System.out.println("Error getting input stream: " + ioe);            
             client.close();
         }
     }
@@ -72,8 +70,7 @@ public class OfficeThread extends Thread
             }
             catch (IOException ioe)
             {
-                System.out.println("Listening error: " + ioe.getMessage());
-                //client1.stop();
+                System.out.println("Listening error: " + ioe.getMessage());                
                 client.close();
             } catch (ClassNotFoundException ex) {
                 Logger.getLogger(OfficeThread.class.getName()).log(Level.SEVERE, null, ex);

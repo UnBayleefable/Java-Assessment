@@ -7,8 +7,11 @@ package trafficmonitoringapplication;
 
 import java.net.*;
 import java.io.*;
-import java.util.*;
 
+/**
+ *
+ * @author Shane Plater - 2017
+ */
 public class ServerThread extends Thread {
 
     private TrafficData trafficData;
@@ -17,6 +20,7 @@ public class ServerThread extends Thread {
     private int ID = -1;
     private ObjectInputStream streamIn = null;
     private ObjectOutputStream streamOut = null;
+   
 
     public ServerThread(Server _server, Socket _socket) {
         super();
@@ -27,7 +31,7 @@ public class ServerThread extends Thread {
 
     public void send(TrafficData data) {
         try {
-            streamOut.writeObject(data);
+            streamOut.writeObject(data);            
             streamOut.flush();
         } catch (IOException ioe) {
             System.out.println(ID + " ERROR sending: " + ioe.getMessage());
@@ -45,8 +49,7 @@ public class ServerThread extends Thread {
         System.out.println("Server Thread " + ID + " running.");
         while (true) {
             try {
-                trafficData = (TrafficData) streamIn.readObject();
-                System.out.println("data read in: " + trafficData.Time);
+                trafficData = (TrafficData) streamIn.readObject();               
                 server.handle(trafficData);
             } catch (IOException ex) {
                 System.out.println(ID + " ERROR reading: " + ex.getMessage());
@@ -58,6 +61,7 @@ public class ServerThread extends Thread {
     }
 
     public void open() throws IOException {
+        // output stream is required to be instantiated before the input stream or the input will hang
         streamOut = new ObjectOutputStream(new BufferedOutputStream(socket.getOutputStream()));
         streamOut.flush();
         streamIn = new ObjectInputStream(new BufferedInputStream(socket.getInputStream()));

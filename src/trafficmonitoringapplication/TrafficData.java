@@ -11,7 +11,7 @@ import java.util.ArrayList;
 
 /**
  *
- * @author student
+ * @author Shane Plater
  */
 public class TrafficData implements Serializable
 {
@@ -37,7 +37,7 @@ public class TrafficData implements Serializable
     
     public TrafficData(ResultSet reader) throws SQLException
     {
-       Time = reader.getString(2).substring(11, 19);
+       Time = reader.getString(2).substring(11, 19); // remove the date within the string to only return the time
        LocationID = reader.getString(3);
        NumberOfLanes = reader.getString(4);
        TotalVehicleNum = reader.getString(5);
@@ -47,14 +47,13 @@ public class TrafficData implements Serializable
 
     public ArrayList<TrafficData> GetAllData() throws SQLException
     {
-        //ArrayList<TrafficData> trafficData = Select("SELECT * FROM tblITTown");
         return Select("SELECT * FROM ITTownList");
     }
     public ArrayList Select(String query) throws SQLException
     {
         ArrayList<TrafficData> data = new ArrayList<>();
         java.io.File f = new java.io.File("1b_ITTownTrafficMonitoringPrototype.mdb");
-        String fileLoc = f.getAbsolutePath();
+        String fileLoc = f.getAbsolutePath(); // return database file path to have dynamic reference
         String conString = "jdbc:ucanaccess://" + fileLoc;
         Connection conn = DriverManager.getConnection(conString);
         Statement s = conn.createStatement();

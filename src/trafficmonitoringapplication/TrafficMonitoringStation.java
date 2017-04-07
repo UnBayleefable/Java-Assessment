@@ -14,17 +14,10 @@ import java.util.*;
 
 /**
  *
- * @author Shane Plater
+ * @author Shane Plater - 2017
  */
 public class TrafficMonitoringStation extends JFrame implements ActionListener, KeyListener {
 
-    /*
-     want to implement the ability that when a station comes online it checks for a list of known stations online then adds itself to it and allocates a unique station id number
-     time = current time
-     location = unique id
-     # lanes - randomly generated on program open but uneditible to simulate a different location for each station
-     Avg 3 Vehicles/avg velocity - randomly generated each time submit is pressed so new data can be entered on next submit
-     */
     //<editor-fold defaultstate="collapsed" desc="Variables">
     public JLabel lblMainHeading, lblSubHeading, lblTime, lblLocation, lblNumberOfLanes, lblTotalVehicleNum, lblAvVehicleNum, lblAvVelocity;
     public JTextField txtTime, txtLocation, txtNumberOfLanes, txtTotalVehicleNum, txtAvVehichleNum, txtAvVelocity;
@@ -38,6 +31,7 @@ public class TrafficMonitoringStation extends JFrame implements ActionListener, 
     private ObjectOutputStream streamOut = null;   
     private String serverName = "localhost";
     private int serverPort = 4444;
+    private String socketID = "";
 
     //</editor-fold>
     
@@ -54,8 +48,7 @@ public class TrafficMonitoringStation extends JFrame implements ActionListener, 
             public void windowClosing(WindowEvent e) {
                 System.exit(0);
             }
-        });
-        readData();
+        });        
         displayGUI();
         setResizable(false);
         setVisible(true);
@@ -104,7 +97,7 @@ public class TrafficMonitoringStation extends JFrame implements ActionListener, 
     @Override
     public void actionPerformed(ActionEvent e) {
         if (e.getSource() == btnExit) {
-            close();
+            close(); // close connection to server
             System.exit(0);
         }
         if (e.getSource() == btnSubmit) {
@@ -115,12 +108,9 @@ public class TrafficMonitoringStation extends JFrame implements ActionListener, 
             currentData.NumberOfLanes = txtNumberOfLanes.getText();
             currentData.TotalVehicleNum = txtTotalVehicleNum.getText();
             currentData.AvVelocity = txtAvVelocity.getText();
-
-            try {
-                send(currentData);
-            } catch (IOException ex) {
-                System.out.println("Unexpected exception: " + ex.getMessage());
-            }
+            
+            send(currentData);
+            
 
         }
         if (e.getSource() == btnConnect) {
@@ -145,25 +135,7 @@ public class TrafficMonitoringStation extends JFrame implements ActionListener, 
     }
     //</editor-fold>    
     //</editor-fold>
-
-    //<editor-fold defaultstate="collapsed" desc="File Management">
-    private void readData() {
-        // retrieve list of active stations and assign unique id
-    }
-
-    private void writeData() {
-        //send data to the Monitoring Office
-    }
-
-    private void testArrayContents(ArrayList<Object[]> arr) {
-        for (int i = 0; i < arr.size(); i++) {
-            System.out.println(arr.get(i)[0] + " " + arr.get(i)[1] + " " + arr.get(i)[2] + " " + arr.get(i)[3] + " " + arr.get(i)[4] + " " + arr.get(i)[5]);
-
-        }
-        System.out.println();
-    }
-
-    //</editor-fold>
+    
     //<editor-fold defaultstate="collapsed" desc="Server Connection">
     public void connect() {
         System.out.println("Establishing connection. Please wait ...");
@@ -179,11 +151,10 @@ public class TrafficMonitoringStation extends JFrame implements ActionListener, 
     }
 
 
-    public void send(TrafficData data) throws IOException {
+    public void send(TrafficData data) {
         try
         {
-        streamOut.writeObject(data);
-        System.out.println("successfully sent data");
+        streamOut.writeObject(data);       
         streamOut.flush();
         }catch(IOException ex){
         System.out.println("Error Sending Data: " + ex);

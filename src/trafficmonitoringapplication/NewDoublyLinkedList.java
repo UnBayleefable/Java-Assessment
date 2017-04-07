@@ -9,7 +9,7 @@ import java.util.ArrayList;
 
 /**
  *
- * @author student
+ * @author Shane Plater - 2017
  */
 public class NewDoublyLinkedList {
     
@@ -112,7 +112,7 @@ public class NewDoublyLinkedList {
     
      public void DisplayBackwards()
     {
-       System.out.print("Displaying in forward direction [first--->last] : ");
+       System.out.print("Displaying in reverse direction [Last ---> First] : ");
        DLLNode tempDisplay = tail;
        tempDisplay.DisplayNode();
        tempDisplay = tempDisplay.prev;
@@ -133,8 +133,8 @@ class DLLNode
     
     DLLNode()
     {
-        prev = this;
-        next = this;
+        prev = null;
+        next = null;
         DLLNodeData = new TrafficData();
     }
     DLLNode(TrafficData data)

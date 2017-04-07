@@ -7,20 +7,19 @@ import java.net.*;
 import java.io.*;
 import java.util.*;
 import java.sql.*;
-import java.util.logging.Level;
-import java.util.logging.Logger;
-import javax.swing.RowFilter.Entry;
 import javax.swing.table.AbstractTableModel;
 
+/**
+ *
+ * @author Shane Plater - 2017
+ */
 public class TrafficMonitoringApplication extends JFrame implements ActionListener, KeyListener {
-
-    //currently the linked list doesnt update with the sorting of the table, im thinking i have to implement the table sorting with the main array instead of a seperate array so it can do both
-    //monitor table currently uses same data as normal table so i need to seperate the two
-//<editor-fold defaultstate="collapsed" desc="Variables">
+    
+    //<editor-fold defaultstate="collapsed" desc="Variables">
     public JButton btnExit, btnBTDisplay, btnPODisplay, btnPOSave, btnIODisplay, btnIOSave, btnPostDisplay, btnPostSave, btnLocSort, btnVehicleSort, btnVelocitySort, btnConnect;
     public JLabel lblAppHeading, lblDataRecievedHeading, lblLinkedList, lblBinaryTree, lblPreOrder, lblInOrder, lblPostOrder, lblTableHeading, lblSort;
-    public JTextArea txtLinkedList, txtBinaryTree, txtDataRecieved;
-    public JTable tblTrafficData, tblMonitorData;
+    public JTextArea txtLinkedList, txtBinaryTree, txtDataRecieved, txtMonitorData;
+    public JTable tblTrafficData;
     public BinaryTree trafficTree;
     public TableModel myModel;
 
@@ -36,7 +35,6 @@ public class TrafficMonitoringApplication extends JFrame implements ActionListen
     ArrayList<Object[]> monitorData;
     ArrayList<String[]> binaryData;
     ArrayList<String> linkedListData;
-    String fileName = "binarysave";
     SpringLayout springLayout;
 
     private Socket socket = null;
@@ -46,18 +44,18 @@ public class TrafficMonitoringApplication extends JFrame implements ActionListen
     private int serverPort = 4444;
 
     //</editor-fold>
+    
     public static void main(String[] args) throws SQLException, IOException, FileNotFoundException, ClassNotFoundException {
         TrafficMonitoringApplication AppWindow = new TrafficMonitoringApplication();
         AppWindow.run();
     }
 
-    public void run() throws SQLException, IOException, FileNotFoundException, ClassNotFoundException {
+    public void run(){
         setTitle("Traffic Monitoring Application");
         setBounds(500, 250, 700, 610);
         addWindowListener(new WindowAdapter() {
             @Override
             public void windowClosing(WindowEvent e) {
-
                 System.exit(0);
             }
         });
@@ -83,12 +81,15 @@ public class TrafficMonitoringApplication extends JFrame implements ActionListen
 
     private void displayTable(SpringLayout layout) {
         tblTrafficData = LibraryComponents.LocateAJTable(this, myModel, layout, tblTrafficData, trafficTableData, tblTrafficDataHeadings, 40, 110, 340, 200);
-        tblMonitorData = LibraryComponents.LocateAJTable(this, myModel, layout, tblMonitorData, monitorData, tblMonitorHeadings, 400, 110, 260, 200);
+
     }
 
     private void displayTextAreas(SpringLayout layout) {
         txtLinkedList = LibraryComponents.LocateAJTextArea(this, layout, txtLinkedList, 38, 370, 4, 56);
         txtBinaryTree = LibraryComponents.LocateAJTextArea(this, layout, txtBinaryTree, 38, 470, 3, 56);
+        txtMonitorData = LibraryComponents.LocateAJTextArea(this, layout, txtMonitorData, 400, 110, 12, 23);
+        txtBinaryTree.setLineWrap(true);
+        txtMonitorData.setLineWrap(true);
         txtLinkedList.setLineWrap(true);
     }
 
@@ -137,6 +138,7 @@ public class TrafficMonitoringApplication extends JFrame implements ActionListen
     public void actionPerformed(ActionEvent e) {
 
         if (e.getSource() == btnExit) {
+            close();
             System.exit(0);
         }
 
@@ -151,7 +153,7 @@ public class TrafficMonitoringApplication extends JFrame implements ActionListen
             DisplayBinaryTree();
         }
         if (e.getSource() == btnPOSave) {
-
+            writeData();
         }
 
         if (e.getSource() == btnIODisplay) {
@@ -162,11 +164,8 @@ public class TrafficMonitoringApplication extends JFrame implements ActionListen
         }
 
         if (e.getSource() == btnIOSave) {
-            try {
-                writeData();
-            } catch (IOException ex) {
-                System.out.println("error: " + ex);
-            }
+            writeData();
+
         }
 
         if (e.getSource() == btnPostDisplay) {
@@ -176,37 +175,27 @@ public class TrafficMonitoringApplication extends JFrame implements ActionListen
             DisplayBinaryTree();
         }
         if (e.getSource() == btnPostSave) {
-
+            writeData();
         }
 
         if (e.getSource() == btnLocSort) {
             trafficTableData = SortingLibrary.BubbleSort(trafficTableData);
             tblTrafficData.repaint();
-           
-            DisplayLinkedList();
         }
 
         if (e.getSource() == btnVehicleSort) {
             trafficTableData = SortingLibrary.SelectionSort(trafficTableData);
             tblTrafficData.repaint();
-            
-            DisplayLinkedList();
         }
 
         if (e.getSource() == btnVelocitySort) {
             trafficTableData = SortingLibrary.InsertionSort(trafficTableData);
             tblTrafficData.repaint();
-            
-            DisplayLinkedList();
-        }
-        if (e.getSource() == btnConnect) {
-            try {
-                connect();
-            } catch (ClassNotFoundException ex) {
-                Logger.getLogger(TrafficMonitoringApplication.class.getName()).log(Level.SEVERE, null, ex);
-            }
         }
 
+        if (e.getSource() == btnConnect) {
+            connect();
+        }
     }
 
     //<editor-fold defaultstate="collapsed" desc="Unused">
@@ -230,58 +219,56 @@ public class TrafficMonitoringApplication extends JFrame implements ActionListen
     //</editor-fold>
     
     //<editor-fold defaultstate="collapsed" desc="File Management">
-    private void readData() throws SQLException, FileNotFoundException, IOException, ClassNotFoundException {
-
+    private void readData() {
         trafficData = new ArrayList<>();
-        TrafficData data = new TrafficData();
-        trafficData = data.GetAllData();
-        disperseData(trafficData);
-
-    }
-
-    public void disperseData(ArrayList<TrafficData> arr) throws IOException, ClassNotFoundException {
         trafficTableData = new ArrayList<>();
-        myModel = new TableModel(trafficTableData, tblTrafficDataHeadings);
-        
         binaryData = new ArrayList<>();
         trafficTree = new BinaryTree();
         myDLList = new NewDoublyLinkedList();
-        for (TrafficData temp : arr) {
-            String timeTemp = temp.Time + temp.LocationID;
-            myDLList.InsertTailNode(myDLList, new DLLNode(temp));
-            trafficTree.addNode(Integer.parseInt(temp.TotalVehicleNum), temp.Time + temp.LocationID);
-            addTableData(temp);
+        TrafficData data = new TrafficData();
+        try {
+
+            trafficData = data.GetAllData(); // call for data using UCanAccess
+            myModel = new TableModel(trafficTableData, tblTrafficDataHeadings); // create table model using returned data
+            
+            // iterate through records and disperse data
+            for (TrafficData temp : trafficData) {
+                myDLList.InsertTailNode(myDLList, new DLLNode(temp));
+                trafficTree.addNode(Integer.parseInt(temp.TotalVehicleNum), temp.Time + temp.LocationID);
+                addTableData(temp);
+            }
+            try {
+                // attempt to read in hash map from serialized file within directory
+                ObjectInputStream hmIn = new ObjectInputStream(new FileInputStream("HashMap.ser"));
+                hm = (HashMap) hmIn.readObject();
+                hmIn.close();
+            } catch (IOException ex) {
+                // dont do anything if the file doesnt exist
+            }
+        } catch (SQLException | ClassNotFoundException ex) {
+            System.out.println("error: " + ex);
         }
-        ObjectInputStream hmIn = new ObjectInputStream(new FileInputStream("HashMap.ser"));
-        hm = (HashMap) hmIn.readObject();
-        hmIn.close();
-        System.out.println(hm); 
-        //Integer.parseInt(temp.TotalVehicleNum)
     }
 
     public void addTableData(TrafficData arr) {
-
         myModel.add(arr.Time, arr.LocationID, arr.AvVehicleNum, arr.AvVelocity);
-        //drawData();
-
     }
 
-    public void writeData() throws IOException {
-        
-        ObjectOutputStream hashOut = new ObjectOutputStream(new FileOutputStream("HashMap.ser"));
-        hashMapping();
-        System.out.println(hm);
-        hashOut.writeObject(hm);
-        hashOut.close();        
-        
-//        Properties properties = new Properties();
-        
-//        
-//        for (Map.Entry<Integer,String> entry : hm.entrySet()) {
-//    properties.put(entry.getKey(), entry.getValue());
-//}
-//        
-//        properties.store(new FileOutputStream("data.Properties"), null);
+    public void writeData() {
+        // saving hashmap as serialized file        
+        hm = new HashMap<>();
+
+        for (String[] key : binaryData) {
+            hm.put(Integer.parseInt(key[0]), key[1]);
+        }
+        try {
+            ObjectOutputStream hashOut = new ObjectOutputStream(new FileOutputStream("HashMap.ser"));
+            hashOut.writeObject(hm);
+            hashOut.close();
+        } catch (IOException ex) {
+            System.out.println("error: " + ex);
+        }
+
     }
 
     private void drawData() {
@@ -293,8 +280,7 @@ public class TrafficMonitoringApplication extends JFrame implements ActionListen
 
     private void DisplayBinaryTree() {
 
-        if (binaryData.isEmpty()) { // setting up first entry into txtBinaryTree
-
+        if (binaryData.isEmpty()) { // if no entries are in the binary list
             txtBinaryTree.setText("In-Order: ");
             trafficTree.inOrderTraverseTree(trafficTree.root, binaryData);
         }
@@ -309,9 +295,8 @@ public class TrafficMonitoringApplication extends JFrame implements ActionListen
     }
 
     private void DisplayLinkedList() {
-        txtLinkedList.setText("");
-         linkedListData = new ArrayList<>();
-         //disperseData(trafficData);
+        txtLinkedList.setText(""); // reseting linked list display
+        linkedListData = new ArrayList<>();
         myDLList.ReturnListArray(linkedListData);
         for (int i = 0; i < linkedListData.size(); i++) {
             if (i == 0) {
@@ -327,34 +312,10 @@ public class TrafficMonitoringApplication extends JFrame implements ActionListen
 
     }
 
-    private void testArrayContents(ArrayList<String[]> arr) {
-        for (int i = 0; i < arr.size(); i++) {
-            System.out.println(arr.get(i)[0] + " " + arr.get(i)[1]);
-
-        }
-        System.out.println();
-    }
-    
-    private void hashMapping()
-    {
-        
-        hm = new HashMap<Integer, String>();
-        testArrayContents(binaryData);
-        int i = 0;
-        for (String[] key : binaryData)
-        {
-            hm.put(Integer.parseInt(binaryData.get(i)[0]), binaryData.get(i)[1]);
-            i++;
-        }
-        
-
-
-    }
-
     //</editor-fold>
     
     //<editor-fold defaultstate="collapsed" desc="Server Connection">
-    public void connect() throws ClassNotFoundException {
+    public void connect() {
         System.out.println("Establishing connection. Please wait ...");
         try {
             socket = new Socket(serverName, serverPort);
@@ -363,31 +324,28 @@ public class TrafficMonitoringApplication extends JFrame implements ActionListen
         } catch (UnknownHostException uhe) {
             System.out.println("Host unknown: " + uhe.getMessage());
         } catch (IOException ioe) {
-            System.out.println("Unexpected exception: " + ioe.getMessage());
+            System.out.println("Cannot connect to server: " + ioe.getMessage());
         }
     }
 
-    public void handle(TrafficData data) throws IOException, ClassNotFoundException {
-
-        trafficData.add(data);
-        System.out.println("data read in: " + data.Time);
-        addTableData(data);
-
-        binaryData = new ArrayList<>(); // fixing a doubling issue within the binary data after initial startup        
+    public void handle(TrafficData data) {
+    // add recieved data to the table and array
+        trafficData.add(data); 
+        addTableData(data); 
+        txtMonitorData.append("Data Recieved From Station: " + data.LocationID + " at " + data.Time + "\n");
+        binaryData = new ArrayList<>(); // clear binary array to insure no doubleups occur
+        //disperse new entry to binary tree and linked list
         myDLList.InsertTailNode(myDLList, new DLLNode(data));
         trafficTree.addNode(Integer.parseInt(data.TotalVehicleNum), data.Time + data.LocationID);
-      
-        
         drawData();
     }
 
-    public void open() throws ClassNotFoundException {
-        try {
+    public void open() {
+        try { 
+            // output stream needs to be flushed to insure the pipe is clear
             streamOut = new ObjectOutputStream(new BufferedOutputStream(socket.getOutputStream()));
             streamOut.flush();
             clientThread = new OfficeThread(this, socket);
-            // streamIn = new ObjectInputStream(new BufferedInputStream(socket.getInputStream()));            
-
         } catch (IOException ioe) {
             System.out.println("Error opening output stream: " + ioe);
         }
@@ -404,14 +362,15 @@ public class TrafficMonitoringApplication extends JFrame implements ActionListen
         } catch (IOException ioe) {
             System.out.println("Error closing ...");
         }
-
     }
 
     public void getParameters() {
         serverName = "localhost";
         serverPort = 4444;
     }
+    
     //</editor-fold>
+    
 }
 
 class TableModel extends AbstractTableModel {
